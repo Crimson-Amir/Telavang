@@ -4,7 +4,7 @@ import jwt
 from application.logger_config import fastapi_listener
 from application.auth import create_access_token
 from application.setting import settings
-from application.user import authentication, user
+from application.user import authentication
 from application.admin import manage
 from contextlib import asynccontextmanager
 from application.helper.token_helpers import TokenBlacklist, set_cookie
@@ -30,14 +30,12 @@ app.add_middleware(
 # application.mount('/statics', StaticFiles(directory='statics'), name='static')
 
 app.include_router(authentication.router)
-app.include_router(user.router)
 app.include_router(manage.router)
 
 @app.middleware("http")
 async def authenticate_request(request: Request, call_next):
 
-    exception_paths = ["/auth/logout-successful", "/auth/sign-up", "/auth/enter-number", "/auth/verify-otp",
-                       "/hc", "/docs", "/auth/logout"]
+    exception_paths = ["/auth/logout-successful" "/auth/login", "/docs", "/auth/logout"]
 
     if any(request.url.path.startswith(path) for path in exception_paths):
         return await call_next(request)
