@@ -1,11 +1,10 @@
 from fastapi import Request, Depends, Response, APIRouter, HTTPException, Cookie
 from fastapi.responses import RedirectResponse
-from application import tasks, crud, schemas
+from application import crud, schemas
 from application.setting import settings
 from sqlalchemy.orm import Session
 from application.auth import create_access_token, create_refresh_token, decode_token
 from application.database import SessionLocal
-from datetime import timedelta
 from application.logger_config import logger
 import random, time
 from application.helpers import endpoint_helper, token_helpers
@@ -25,42 +24,14 @@ def get_db():
     finally: db.close()
 
 
-def generate_otp():
-    return random.randint(1000, 9999)
-
-@router.post('/enter-number')
+@router.post('/login')
 @handle_errors
-async def enter_number(user: schemas.LogInRequirement, db: Session = Depends(get_db)):
-    phone = user.phone_number.strip()
-    if not phone.startswith("09") or len(phone) != 11 or not phone.isdigit():
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid phone number. It must start with '09' and contain exactly 11 digits."
-        )
-    code = str(generate_otp())
-    task = tasks.send_otp.delay(phone, code)
-    # TODO: REMOVE THIS IN PRODACTION
-    tasks.report_to_admin_api.delay(f"OTP CODE: {code}")
-    logger.info(f"{FILE_NAME}:enter_number", extra={"phone_number": phone})
-    return {'status': 'OK', 'message': 'OTP sent','task_id': task.id}
-
-@router.post('/verify-otp')
-@handle_errors
-async def verify_otp(request: Request, response: Response, data: schemas.VerifyOTPRequirement, db: Session = Depends(get_db)):
-    otp_store = token_helpers.OTPStore(request.app.state.redis)
-
-    if not await otp_store.verify_otp(data.phone_number, data.code):
-        raise HTTPException(status_code=400, detail="OTP not found or incorrect")
+async def login(response: Response, data: schemas.VerifyOTPRequirement, db: Session = Depends(get_db)):
 
     db_user = crud.get_user_by_phone_number(db, data.phone_number)
 
     if not db_user:
-        token = create_access_token(
-            data={"phone_number": data.phone_number, "purpose": "signup"},
-            expires_delta=timedelta(minutes=settings.SIGN_UP_TEMPORARY_TOKEN_EXP_MIN)
-        )
-        token_helpers.set_cookie(response, "temporary_sign_up_token", token, settings.SIGN_UP_TEMPORARY_TOKEN_EXP_MIN * 60)
-        step = 'sign-up'
+        raise HTTPException(status_code=404, detail="user does not found")
     else:
         user_data = {
             "first_name": db_user.first_name,
@@ -70,15 +41,14 @@ async def verify_otp(request: Request, response: Response, data: schemas.VerifyO
         cr_refresh_token = create_refresh_token(data=user_data)
         token_helpers.set_cookie(response, "access_token", access_token, settings.ACCESS_TOKEN_EXP_MIN * 60)
         token_helpers.set_cookie(response, "refresh_token", cr_refresh_token, settings.REFRESH_TOKEN_EXP_MIN * 60)
-        step = 'login'
 
-    logger.info(f"{FILE_NAME}:verify_otp:{step}", extra={"phone_number": data.phone_number, "code": data.code})
-    return {'status': 'OK', 'step': step}
+        logger.info(f"{FILE_NAME}:login", extra={"phone_number": data.phone_number, "code": data.code})
+        return {'status': 'OK'}
 
 @router.get('/logout-successful')
 @handle_errors
 async def logout_successful():
-    return {'status': 'logout successful'}
+    return {'status': 'OK'}
 
 
 @router.post('/logout')
