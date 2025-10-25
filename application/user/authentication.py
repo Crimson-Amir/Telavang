@@ -3,11 +3,11 @@ from fastapi.responses import RedirectResponse
 from application import crud, schemas
 from application.setting import settings
 from sqlalchemy.orm import Session
-from application.auth import create_access_token, create_refresh_token, decode_token
+from application.auth import create_access_token, create_refresh_token, decode_token, hash_password_md5
 from application.database import SessionLocal
 from application.logger_config import logger
-import random, time
-from application.helpers import endpoint_helper, token_helpers
+import time
+from application.helper import token_helpers, endpoint_helper
 
 FILE_NAME = "user:authentication"
 handle_errors = endpoint_helper.handle_endpoint_errors(FILE_NAME)
@@ -26,13 +26,22 @@ def get_db():
 
 @router.post('/login')
 @handle_errors
-async def login(response: Response, data: schemas.VerifyOTPRequirement, db: Session = Depends(get_db)):
+async def login(response: Response, data: schemas.LogInRequirement, db: Session = Depends(get_db)):
+    phone = data.phone_number.strip()
+    if not phone.startswith("09") or len(phone) != 11 or not phone.isdigit():
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid phone number. It must start with '09' and contain exactly 11 digits."
+        )
 
     db_user = crud.get_user_by_phone_number(db, data.phone_number)
 
     if not db_user:
-        raise HTTPException(status_code=404, detail="user does not found")
+        raise HTTPException(status_code=404, detail="User does not found")
     else:
+        hash_password = hash_password_md5(data.password)
+        if hash_password != db_user.password:
+            raise HTTPException(status_code=403, detail="Password is not correct")
         user_data = {
             "first_name": db_user.first_name,
             "user_id": db_user.user_id

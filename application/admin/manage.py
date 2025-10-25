@@ -64,8 +64,6 @@ async def remove_admin(admin_id: int, db: Session = Depends(get_db), _: int = De
             detail=str(e)
         )
 
-
-
 @router.post('/create_user/')
 async def create_user(user: schemas.SignUpRequirement, request: Request, db: Session = Depends(get_db),  _: int = Depends(require_admin)):
 
