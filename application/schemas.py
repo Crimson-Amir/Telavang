@@ -19,3 +19,13 @@ class SignUpReturn(UserID):
 class LogInRequirement(BaseModel):
     phone_number: str
     password: str
+
+
+class NewAdminRequirement(UserID):
+    status: bool = True
+
+class NewAdminResult(BaseModel):
+    admin_id: int
+
+    class Config:
+        from_attributes = True

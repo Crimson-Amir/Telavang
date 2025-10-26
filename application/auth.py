@@ -9,13 +9,13 @@ def create_access_token(data: dict, expires_delta: timedelta = timedelta(minutes
     to_encode = data.copy()
     expire = datetime.now() + expires_delta
     to_encode.update({"exp": int(expire.timestamp())})
-    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    return jwt.encode(to_encode, settings.ACCESS_TOKEN_SECRET_KEY, algorithm=settings.ALGORITHM)
 
 def create_refresh_token(data: dict, expires_delta: timedelta = timedelta(minutes=settings.REFRESH_TOKEN_EXP_MIN)):
     to_encode = data.copy()
     expire = datetime.now() + expires_delta
     to_encode.update({"exp": int(expire.timestamp())})
-    return jwt.encode(to_encode, settings.REFRESH_SECRET_KEY, algorithm=settings.ALGORITHM)
+    return jwt.encode(to_encode, settings.REFRESH_TOKEN_SECRET_KEY, algorithm=settings.ALGORITHM)
 
 def hash_password_md5(password: str) -> str:
     password_bytes = password.encode()
@@ -24,7 +24,7 @@ def hash_password_md5(password: str) -> str:
     return md5_hash.hexdigest()
 
 
-def decode_token(token: str, key=settings.SECRET_KEY) -> dict:
+def decode_token(token: str, key=settings.ACCESS_TOKEN_SECRET_KEY) -> dict:
     try:
         return jwt.decode(token, key, algorithms=settings.ALGORITHM)
     except ExpiredSignatureError:

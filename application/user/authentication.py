@@ -64,25 +64,7 @@ async def logout_successful():
 @handle_errors
 async def logout(request: Request):
     redirect = RedirectResponse('/auth/logout-successful', status_code=303)
-    blacklist = token_helpers.TokenBlacklist(request.app.state.redis)
 
-    # Access token
-    access_token = request.cookies.get("access_token")
-    if access_token:
-        payload = decode_token(access_token)
-        exp = payload.get("exp")
-        ttl = max(1, exp - int(time.time())) if exp else settings.ACCESS_TOKEN_EXP_MIN * 60
-        await blacklist.add(access_token, ttl)
-
-    # Refresh token
-    refresh_token = request.cookies.get("refresh_token")
-    if refresh_token:
-        payload = decode_token(refresh_token, settings.REFRESH_SECRET_KEY)
-        exp = payload.get("exp")
-        ttl = max(1, exp - int(time.time())) if exp else settings.REFRESH_TOKEN_EXP_MIN * 60
-        await blacklist.add(refresh_token, ttl)
-
-    # Clear cookies
     redirect.delete_cookie(key='access_token', httponly=True, samesite="lax")
     redirect.delete_cookie(key="refresh_token", httponly=True, samesite="lax")
     logger.info(f"{FILE_NAME}:logout")

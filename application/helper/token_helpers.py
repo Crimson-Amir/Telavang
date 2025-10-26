@@ -31,11 +31,3 @@ def set_cookie(response, key, value, max_age):
         samesite="lax",
         max_age=max_age
     )
-
-class TokenBlacklist:
-    def __init__(self, r):
-        self.r = r
-    async def add(self, token: str, ttl: int):
-        await self.r.set(token, 1, ex=ttl, nx=True)
-    async def is_blacklisted(self, token: str) -> bool:
-        return await self.r.exists(token) == 1

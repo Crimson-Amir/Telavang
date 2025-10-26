@@ -7,7 +7,7 @@ from application.setting import settings
 from application.user import authentication
 from application.admin import manage
 from contextlib import asynccontextmanager
-from application.helper.token_helpers import TokenBlacklist, set_cookie
+from application.helper.token_helpers import set_cookie
 from fastapi.middleware.cors import CORSMiddleware
 
 @asynccontextmanager
@@ -43,12 +43,9 @@ async def authenticate_request(request: Request, call_next):
     request.state.user = None
     access_token = request.cookies.get("access_token")
     refresh_token = request.cookies.get("refresh_token")
-    blacklist = TokenBlacklist(request.app.state.redis)
 
     if access_token:
         try:
-            if await blacklist.is_blacklisted(access_token):
-                return JSONResponse(status_code=403, content={"detail": "Access token blacklisted"})
             payload = jwt.decode(access_token, settings.SECRET_KEY, algorithms=settings.ALGORITHM)
             request.state.user = payload
             return await call_next(request)
@@ -59,8 +56,6 @@ async def authenticate_request(request: Request, call_next):
 
     if refresh_token:
         try:
-            if await blacklist.is_blacklisted(refresh_token):
-                return JSONResponse(status_code=403, content={"detail": "Refresh token blacklisted"})
             refresh_payload = jwt.decode(refresh_token, settings.REFRESH_SECRET_KEY, algorithms=settings.ALGORITHM)
             new_token = create_access_token({
                 "user_id": refresh_payload["user_id"],

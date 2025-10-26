@@ -5,8 +5,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      redis:
-        condition: service_healthy
       rabbitmq:
         condition: service_healthy
     ports:
@@ -19,8 +17,6 @@ services:
     env_file: .env
     depends_on:
       db:
-        condition: service_healthy
-      redis:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
@@ -67,6 +63,4 @@ services:
 
 volumes:
   postgres_data:
-  redis_data:
-  redisinsight_data:
   rabbitmq_data:
