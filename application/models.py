@@ -1,8 +1,6 @@
 import secrets
-from sqlalchemy.types import Unicode
 from application.database import Base
-from sqlalchemy import Integer, String, Column, Boolean, ForeignKey, DateTime, BigInteger
-from sqlalchemy import ForeignKeyConstraint
+from sqlalchemy import Integer, String, Column, Boolean, ForeignKey, DateTime, LargeBinary, Float, Text
 from datetime import datetime
 from pytz import UTC
 from sqlalchemy.orm import relationship
@@ -23,7 +21,7 @@ class User(Base):
     register_date = Column(DateTime, default=lambda: datetime.now(UTC))
 
     admin_associations = relationship("Admin", back_populates="user", cascade="all, delete-orphan")
-
+    visit_associations = relationship("VisitData", back_populates="user", cascade="all, delete-orphan")
 
 class Admin(Base):
     __tablename__ = 'admin'
@@ -33,3 +31,19 @@ class Admin(Base):
     user = relationship("User", back_populates="admin_associations")
     register_date = Column(DateTime, default=lambda: datetime.now(UTC))
 
+class VisitData(Base):
+    __tablename__ = "visit_data"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("user_detail.user_id"))
+    hs_unique_code = Column(String, nullable=False)
+    filename = Column(String, nullable=False)
+    file_data = Column(LargeBinary, nullable=False)
+    place_name = Column(String, nullable=False)
+    person_name = Column(String, nullable=False)
+    person_position = Column(String, nullable=True)
+    latitude = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
+    visit_timestamp = Column(DateTime, default=lambda: datetime.now(UTC))
+    description = Column(Text, nullable=True)
+    user = relationship("User", back_populates="visit_associations")

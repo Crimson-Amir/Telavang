@@ -1,26 +1,22 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from application import crud, schemas
 from sqlalchemy.orm import Session
-from application.database import SessionLocal
+from application.helper import endpoint_helper
 from application.logger_config import logger
 from application.setting import settings
 from application import tasks
 
 FILE_NAME = 'admin:manage'
+handle_errors = endpoint_helper.handle_endpoint_errors(FILE_NAME)
 
 router = APIRouter(
     prefix='/admin',
     tags=['hardware_communication']
 )
-def get_db():
-    db = SessionLocal()
-    try: yield db
-    finally: db.close()
-
 
 def require_admin(
     request: Request,
-    db: Session = Depends(get_db)
+    db: Session = Depends(endpoint_helper.get_db)
 ):
     user = request.state.user
     if not user:
@@ -36,8 +32,9 @@ def require_admin(
 
     return user_id
 
-@router.post('/new', response_model=schemas.NewAdminResult)
-async def new_admin(admin: schemas.NewAdminRequirement, db: Session = Depends(get_db), _: int = Depends(require_admin)):
+@router.post('/new_admin', response_model=schemas.NewAdminResult)
+@handle_errors
+async def new_admin(admin: schemas.NewAdminRequirement, db: Session = Depends(endpoint_helper.get_db), _: int = Depends(require_admin)):
     try:
         new = crud.register_new_admin(db, admin)
         logger.info(f"{FILE_NAME}:new_admin", extra={"user_id": admin.user_id, "status": admin.status})
@@ -45,8 +42,9 @@ async def new_admin(admin: schemas.NewAdminRequirement, db: Session = Depends(ge
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.delete('/remove/{admin_id}')
-async def remove_admin(admin_id: int, db: Session = Depends(get_db), _: int = Depends(require_admin)):
+@router.delete('/remove_admin/{admin_id}')
+@handle_errors
+async def remove_admin(admin_id: int, db: Session = Depends(endpoint_helper.get_db), _: int = Depends(require_admin)):
     try:
         result = crud.remove_admin(db, admin_id)
         if result:
@@ -65,7 +63,8 @@ async def remove_admin(admin_id: int, db: Session = Depends(get_db), _: int = De
         )
 
 @router.post('/create_user/')
-async def create_user(user: schemas.SignUpRequirement, request: Request, db: Session = Depends(get_db),  _: int = Depends(require_admin)):
+@handle_errors
+async def create_user(user: schemas.SignUpRequirement, request: Request, db: Session = Depends(endpoint_helper.get_db),  _: int = Depends(require_admin)):
 
     db_user = crud.get_user_by_phone_number(db, user.phone_number)
     if db_user: raise HTTPException(status_code=400, detail="this user already exists!")

@@ -8,8 +8,13 @@ from application.logger_config import logger
 
 def get_db():
     db = SessionLocal()
-    try: yield db
-    finally: db.close()
+    try:
+        yield db
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()
 
 from functools import wraps
 

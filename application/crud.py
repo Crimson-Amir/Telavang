@@ -27,3 +27,40 @@ def register_new_admin(db: Session, admin: schemas.NewAdminRequirement):
     db.commit()
     db.refresh(new_admin)
     return new_admin
+
+def remove_admin(db: Session, admin_id: int):
+    admin = db.query(models.Admin).filter(models.Admin.id == admin_id).first()
+    if not admin:
+        return None
+    db.delete(admin)
+    db.commit()
+    return True
+
+def get_user_by_user_id(db: Session, user_id: int):
+    return db.query(models.User).filter_by(user_id=user_id, active=True).first()
+
+def add_new_visit_entry(
+        db: Session, user_id: int, file, hs_unique_code: str, file_bytes,
+        place_name: str, person_name: str, person_position: str,
+        latitude: float, longitude: float, description: str
+):
+
+    visit_record = models.VisitData(
+        user_id=user_id,
+        hs_unique_code=hs_unique_code,
+        filename=file.filename,
+        file_data=file_bytes,
+        place_name=place_name,
+        person_name=person_name,
+        person_position=person_position,
+        latitude=latitude,
+        longitude=longitude,
+        description=description,
+    )
+
+    db.add(visit_record)
+    db.commit()
+    db.refresh(visit_record)
+
+    return visit_record
+

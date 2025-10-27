@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session
 from application.auth import create_access_token, create_refresh_token, decode_token, hash_password_md5
 from application.database import SessionLocal
 from application.logger_config import logger
-import time
 from application.helper import token_helpers, endpoint_helper
 
 FILE_NAME = "user:authentication"
@@ -18,15 +17,9 @@ router = APIRouter(
     tags=['authentication']
 )
 
-def get_db():
-    db = SessionLocal()
-    try: yield db
-    finally: db.close()
-
-
 @router.post('/login')
 @handle_errors
-async def login(response: Response, data: schemas.LogInRequirement, db: Session = Depends(get_db)):
+async def login(response: Response, data: schemas.LogInRequirement, db: Session = Depends(endpoint_helper.get_db)):
     phone = data.phone_number.strip()
     if not phone.startswith("09") or len(phone) != 11 or not phone.isdigit():
         raise HTTPException(
