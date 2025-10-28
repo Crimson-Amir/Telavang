@@ -4,7 +4,6 @@ from application import crud, schemas
 from application.setting import settings
 from sqlalchemy.orm import Session
 from application.auth import create_access_token, create_refresh_token, decode_token, hash_password_md5
-from application.database import SessionLocal
 from application.logger_config import logger
 from application.helper import token_helpers, endpoint_helper
 
@@ -33,7 +32,7 @@ async def login(response: Response, data: schemas.LogInRequirement, db: Session 
         raise HTTPException(status_code=404, detail="User does not found")
     else:
         hash_password = hash_password_md5(data.password)
-        if hash_password != db_user.password:
+        if hash_password != db_user.hashed_password:
             raise HTTPException(status_code=403, detail="Password is not correct")
         user_data = {
             "first_name": db_user.first_name,
@@ -44,7 +43,7 @@ async def login(response: Response, data: schemas.LogInRequirement, db: Session 
         token_helpers.set_cookie(response, "access_token", access_token, settings.ACCESS_TOKEN_EXP_MIN * 60)
         token_helpers.set_cookie(response, "refresh_token", cr_refresh_token, settings.REFRESH_TOKEN_EXP_MIN * 60)
 
-        logger.info(f"{FILE_NAME}:login", extra={"phone_number": data.phone_number, "code": data.code})
+        logger.info(f"{FILE_NAME}:login", extra={"phone_number": data.phone_number})
         return {'status': 'OK'}
 
 @router.get('/logout-successful')

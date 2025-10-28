@@ -26,7 +26,7 @@ def create_user(db: Session, user: schemas.SignUpRequirement):
     db.refresh(db_user)
     return db_user
 
-def create_admin(db: Session, user_id: int, active=bool):
+def create_admin(db: Session, user_id: int, active: bool):
     new_admin = models.Admin(user_id=user_id, active=active)
     db.add(new_admin)
     db.commit()

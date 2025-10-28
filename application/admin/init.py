@@ -7,11 +7,12 @@ FILE_NAME = 'admin:init'
 handle_errors = endpoint_helper.handle_endpoint_errors(FILE_NAME)
 
 router = APIRouter(
-    prefix='/admin_init',
+    prefix='/admin',
     tags=['admin init']
 )
 
 @router.post("/init")
+@handle_errors
 async def init_admin(
     admin: schemas.SignUpRequirement,
     db: Session = Depends(endpoint_helper.get_db)
@@ -20,6 +21,6 @@ async def init_admin(
     if existing_admin:
         raise HTTPException(status_code=400, detail="Admin already exists")
     user = crud.create_user(db, admin)
-    admin = crud.create_admin(db, user.user_id)
+    admin = crud.create_admin(db, user.user_id, True)
 
     return {"message": "Admin initialized successfully", "admin_id": admin.admin_id}
