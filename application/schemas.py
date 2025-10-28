@@ -1,11 +1,12 @@
 from pydantic import BaseModel
-from typing import Dict
 
 class SignUpRequirement(BaseModel):
     phone_number: str
+    email: str
     first_name: str
     last_name: str
     password: str
+    active: bool
 
 class UserID(BaseModel):
     user_id: int

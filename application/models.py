@@ -1,12 +1,9 @@
-import secrets
 from application.database import Base
 from sqlalchemy import Integer, String, Column, Boolean, ForeignKey, DateTime, LargeBinary, Float, Text
 from datetime import datetime
 from pytz import UTC
 from sqlalchemy.orm import relationship
 
-def generate_token():
-    return secrets.token_urlsafe(32)
 
 class User(Base):
     __tablename__ = 'user_detail'
