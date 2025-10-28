@@ -8,6 +8,9 @@ def get_user_by_phone_number(db: Session, phone_number: str):
 def is_user_admin(db: Session, user_id: str):
     return db.query(models.Admin).filter_by(user_id=user_id, active=True).first()
 
+def get_visit_by_visit_id(db: Session, visit_id: int):
+    return db.query(models.VisitData).filter_by(id=visit_id).first()
+
 def get_first_admin(db: Session):
     return db.query(models.Admin).first()
 
@@ -26,21 +29,16 @@ def create_user(db: Session, user: schemas.SignUpRequirement):
     db.refresh(db_user)
     return db_user
 
-def create_admin(db: Session, user_id: int, active: bool):
-    new_admin = models.Admin(user_id=user_id, active=active)
-    db.add(new_admin)
-    db.commit()
-    return new_admin
 
-def register_new_admin(db: Session, admin: schemas.NewAdminRequirement):
-    new_admin = models.Admin(user_id=admin.user_id, active=admin.status)
+def register_new_admin(db: Session, user_id: int, active: bool):
+    new_admin = models.Admin(user_id=user_id, active=active)
     db.add(new_admin)
     db.commit()
     db.refresh(new_admin)
     return new_admin
 
 def remove_admin(db: Session, admin_id: int):
-    admin = db.query(models.Admin).filter(models.Admin.id == admin_id).first()
+    admin = db.query(models.Admin).filter(models.Admin.admin_id == admin_id).first()
     if not admin:
         return None
     db.delete(admin)
@@ -53,7 +51,7 @@ def get_user_by_user_id(db: Session, user_id: int):
 def add_new_visit_entry(
         db: Session, user_id: int, file, hs_unique_code: str, file_bytes,
         place_name: str, person_name: str, person_position: str,
-        latitude: float, longitude: float, description: str
+        latitude: float, longitude: float, description: str, content_type: str
 ):
 
     visit_record = models.VisitData(
@@ -67,6 +65,7 @@ def add_new_visit_entry(
         latitude=latitude,
         longitude=longitude,
         description=description,
+        content_type=content_type
     )
 
     db.add(visit_record)

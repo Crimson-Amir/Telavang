@@ -1,8 +1,11 @@
-from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException, Request
+from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException, Request, Response
 from application.auth import decode_token
 from application.helper import endpoint_helper
 from sqlalchemy.orm import Session
-from application import crud
+from application import crud, tasks
+from application.setting import settings
+from application.logger_config import logger
+
 
 FILE_NAME = "user:visit"
 handle_errors = endpoint_helper.handle_endpoint_errors(FILE_NAME)
@@ -41,8 +44,21 @@ async def upload_visit_data(
     visit_record = crud.add_new_visit_entry(
         db, user_id, file, hs_unique_code, file_bytes,
         place_name, person_name, person_position,
-        latitude, longitude, description
+        latitude, longitude, description, file.content_type
     )
+
+    download_url = f"{settings.PUBLIC_URL}/visit/voice/{visit_record.id}"
+    msg = (
+        f"📍 New Visit Uploaded\n"
+        f"🏢 Place: {place_name}\n"
+        f"👤 Person: {person_name} ({person_position or 'N/A'})\n"
+        f"🧭 Location: {latitude}, {longitude}\n"
+        f"🧾 Code: {hs_unique_code}\n"
+        f"📅 Time: {visit_record.visit_timestamp}\n"
+        f"🎧 [Download Voice File]({download_url})"
+    )
+    tasks.report_to_admin_api.delay(msg, message_thread_id=settings.VISITS_THREAD_ID)
+    logger.info(f"{FILE_NAME}:upload_visit_data", extra={"msg_": msg})
 
     return {
         "message": "Visit data uploaded successfully",
@@ -50,3 +66,15 @@ async def upload_visit_data(
         "filename": visit_record.filename,
         "timestamp": visit_record.visit_timestamp,
     }
+
+@router.get("/voice/{visit_id}")
+async def download_voice(visit_id: int, db: Session = Depends(endpoint_helper.get_db)):
+    visit = crud.get_visit_by_visit_id(db, visit_id)
+    if not visit:
+        raise HTTPException(status_code=404, detail="Voice not found")
+
+    return Response(
+        content=visit.file_data,
+        media_type=visit.content_type,
+        headers={"Content-Disposition": f"attachment; filename={visit.filename}"}
+    )

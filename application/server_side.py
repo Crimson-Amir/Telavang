@@ -2,12 +2,11 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 import jwt
 from application.logger_config import fastapi_listener
-from application.auth import create_access_token
+from application.auth import create_access_token, set_cookie
 from application.setting import settings
 from application.user import authentication, visit
 from application.admin import manage, init
 from contextlib import asynccontextmanager
-from application.helper.token_helpers import set_cookie
 from fastapi.middleware.cors import CORSMiddleware
 
 @asynccontextmanager

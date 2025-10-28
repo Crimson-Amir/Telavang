@@ -31,3 +31,13 @@ def decode_token(token: str, key=settings.ACCESS_TOKEN_SECRET_KEY) -> dict:
         raise HTTPException(status_code=401, detail="Decod failed: Token expired")
     except InvalidTokenError:
         raise HTTPException(status_code=401, detail="Decod failed: Invalid token")
+
+def set_cookie(response, key, value, max_age):
+    response.set_cookie(
+        key=key,
+        value=value,
+        httponly=True,
+        secure=False, # TODO: TRUE FOR HTTPS
+        samesite="lax",
+        max_age=max_age
+    )

@@ -36,6 +36,7 @@ class VisitData(Base):
     hs_unique_code = Column(String, nullable=False)
     filename = Column(String, nullable=False)
     file_data = Column(LargeBinary, nullable=False)
+    content_type = Column(String, nullable=False)
     place_name = Column(String, nullable=False)
     person_name = Column(String, nullable=False)
     person_position = Column(String, nullable=True)

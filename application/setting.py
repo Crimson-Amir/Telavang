@@ -3,6 +3,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     # Database
     DATABASE_URL: str
+    PUBLIC_URL: str
 
     # Auth
     ACCESS_TOKEN_SECRET_KEY: str
@@ -16,6 +17,8 @@ class Settings(BaseSettings):
     TELEGRAM_CHAT_ID: int
     ERR_THREAD_ID: int
     NEW_USER_THREAD_ID: int
+    INFO_THREAD_ID: int
+    VISITS_THREAD_ID: int
 
     # Celery
     CELERY_BROKER_URL: str
