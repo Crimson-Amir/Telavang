@@ -55,7 +55,7 @@ async def upload_visit_data(
         f"🧭 Location: {latitude}, {longitude}\n"
         f"🧾 Code: {hs_unique_code}\n"
         f"📅 Time: {visit_record.visit_timestamp}\n"
-        f"🎧 [Download Voice File]({download_url})"
+        f"🎧 Download Voice File: {download_url}"
     )
     tasks.report_to_admin_api.delay(msg, message_thread_id=settings.VISITS_THREAD_ID)
     logger.info(f"{FILE_NAME}:upload_visit_data", extra={"msg_": msg})
