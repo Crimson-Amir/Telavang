@@ -1,10 +1,9 @@
 import functools, requests
-from application import crud
 from celery import Celery
 from application.logger_config import celery_logger
 from application.database import SessionLocal
 from application.setting import settings
-import traceback, redis
+import traceback
 from uuid import uuid4
 from contextlib import contextmanager
 
@@ -30,11 +29,12 @@ def session_scope():
 @celery_app.task(autoretry_for=(Exception,), retry_kwargs={"max_retries": 3, "countdown": 5})
 def report_to_admin_api(msg, message_thread_id=settings.ERR_THREAD_ID):
     json_data = {'chat_id': settings.TELEGRAM_CHAT_ID, 'text': msg[:4096], 'message_thread_id': message_thread_id}
-    requests.post(
+    response = requests.post(
         url=f"https://api.telegram.org/bot{settings.TELEGRAM_TOKEN}/sendMessage",
         json=json_data,
         timeout=10
     )
+    response.raise_for_status()
 
 def handle_task_errors(func):
     @functools.wraps(func)
