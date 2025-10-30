@@ -39,6 +39,7 @@ class VisitData(Base):
     content_type = Column(String, nullable=False)
     place_name = Column(String, nullable=False)
     person_name = Column(String, nullable=False)
+    address = Column(String, nullable=False)
     person_position = Column(String, nullable=True)
     latitude = Column(Float, nullable=True)
     longitude = Column(Float, nullable=True)

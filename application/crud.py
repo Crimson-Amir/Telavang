@@ -50,7 +50,7 @@ def get_user_by_user_id(db: Session, user_id: int):
 
 def add_new_visit_entry(
         db: Session, user_id: int, file, hs_unique_code: str, file_bytes,
-        place_name: str, person_name: str, person_position: str,
+        place_name: str, person_name: str, address: str, person_position: str,
         latitude: float, longitude: float, description: str, content_type: str
 ):
 
@@ -61,6 +61,7 @@ def add_new_visit_entry(
         file_data=file_bytes,
         place_name=place_name,
         person_name=person_name,
+        address=address,
         person_position=person_position,
         latitude=latitude,
         longitude=longitude,

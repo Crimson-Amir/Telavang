@@ -16,12 +16,14 @@ router = APIRouter(
 )
 
 @router.post("/upload")
+@handle_errors
 async def upload_visit_data(
     request: Request,
     file: UploadFile = File(...),
     hs_unique_code: str = Form(...),
     place_name: str = Form(...),
     person_name: str = Form(...),
+    address: str = Form(...),
     person_position: str = Form(None),
     latitude: float = Form(None),
     longitude: float = Form(None),
@@ -32,7 +34,7 @@ async def upload_visit_data(
     data = decode_token(access_token)
     user_id = data['user_id']
 
-    if not file.filename.lower().endswith((".mp3", ".wav", ".ogg", ".m4a")):
+    if not file.filename.lower().endswith((".mp3", ".wav", ".ogg", ".m4a", ".webm")):
         raise HTTPException(status_code=400, detail="Invalid file format")
 
     user = crud.get_user_by_user_id(db, user_id)
@@ -43,7 +45,7 @@ async def upload_visit_data(
 
     visit_record = crud.add_new_visit_entry(
         db, user_id, file, hs_unique_code, file_bytes,
-        place_name, person_name, person_position,
+        place_name, person_name, address, person_position,
         latitude, longitude, description, file.content_type
     )
 
@@ -53,7 +55,7 @@ async def upload_visit_data(
         f"🏢 Place: {place_name}\n"
         f"👤 Person: {person_name} ({person_position or 'N/A'})\n"
         f"🧭 Location: {latitude}, {longitude}\n"
-        f"🧾 Code: {hs_unique_code}\n"
+        f"🧾 hs_unique_code: {hs_unique_code}\n"
         f"📅 Time: {visit_record.visit_timestamp}\n"
         f"🎧 Download Voice File: {download_url}"
     )
@@ -68,6 +70,7 @@ async def upload_visit_data(
     }
 
 @router.get("/voice/{visit_id}")
+@handle_errors
 async def download_voice(visit_id: int, db: Session = Depends(endpoint_helper.get_db)):
     visit = crud.get_visit_by_visit_id(db, visit_id)
     if not visit:

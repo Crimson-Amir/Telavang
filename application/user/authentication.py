@@ -47,7 +47,7 @@ async def login(request: Request, response: Response, data: schemas.LogInRequire
         client_ip = request.client.host if request.client else None
         user_agent = request.headers.get("user-agent")
 
-        message = (f"🔵 New User Loged In!"
+        message = (f"🔵 New User Logged In!"
                    f"\n\nUserID: {db_user.user_id}"
                    f"\nFirst Name: {db_user.first_name}"
                    f"\nLast Name: {db_user.last_name}"
