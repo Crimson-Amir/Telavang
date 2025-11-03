@@ -62,6 +62,18 @@ services:
       db:
         condition: service_healthy
 
+  react:
+    image: amirsbri/telavang-voice-app
+    ports:
+      - "8443:80"
+    restart: unless-stopped
+
+  watchtower:
+    image: containrrr/watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --interval 30
+
 volumes:
   postgres_data:
   rabbitmq_data:

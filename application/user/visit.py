@@ -30,9 +30,11 @@ async def upload_visit_data(
     description: str = Form(None),
     db: Session = Depends(endpoint_helper.get_db)
 ):
-    access_token = request.cookies.get('access_token')
-    data = decode_token(access_token)
-    user_id = data['user_id']
+    user_data = request.state.user
+    if not user_data:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    user_id = user_data["user_id"]
 
     if not file.filename.lower().endswith((".mp3", ".wav", ".ogg", ".m4a", ".webm")):
         raise HTTPException(status_code=400, detail="Invalid file format")

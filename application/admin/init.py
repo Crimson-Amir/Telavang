@@ -21,6 +21,6 @@ async def init_admin(
     if existing_admin:
         raise HTTPException(status_code=400, detail="Admin already exists")
     user = crud.create_user(db, admin)
-    admin = crud.create_admin(db, user.user_id, True)
+    admin = crud.register_new_admin(db, user.user_id, True)
 
     return {"message": "Admin initialized successfully", "admin_id": admin.admin_id}

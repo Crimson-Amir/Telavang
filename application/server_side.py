@@ -19,7 +19,7 @@ app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://telavang.freebyte.shop", "https://telavang.freebyte.shop", "https://telavang.freebyte.shop:8443"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -35,6 +35,8 @@ app.include_router(visit.router)
 
 @app.middleware("http")
 async def authenticate_request(request: Request, call_next):
+    if request.method == "OPTIONS":
+        return await call_next(request)
 
     exception_paths = ["/auth/logout-successful", "/auth/login", "/docs", "/auth/logout", "/admin/init"]
 
