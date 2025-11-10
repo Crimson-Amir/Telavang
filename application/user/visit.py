@@ -51,14 +51,14 @@ async def upload_visit_data(
 
     download_url = f"{settings.PUBLIC_URL}/visit/voice/{visit_record.id}"
     msg = (
-        f"📍 New Visit Uploaded\n"
-        f"🏢 Place: {place_name}\n"
-        f"👤 Person: {person_name} ({person_position or 'N/A'})\n"
-        f"🧭 latitude & longitude: {latitude}, {longitude}\n"
-        f"🏠 Address: {address}\n"
-        f"🧾 hs_unique_code: {hs_unique_code}\n"
-        f"📅 Time: {visit_record.visit_timestamp}\n"
-        f"🎧 Download Voice File: {download_url}"
+        f"📍 یک ویزیت جدید ثبت شد!\n"
+        f"🏢 مکان: {place_name}\n"
+        f"👤 شخص: {person_name} ({person_position or 'N/A'})\n"
+        f"🧭 طول جغرافیایی & عرض جغرافیایی: {latitude}, {longitude}\n"
+        f"🏠 آدرس: {address}\n"
+        f"🧾 کد همکاران سیستم: {hs_unique_code}\n"
+        f"📅 زمان: {visit_record.visit_timestamp}\n"
+        f"🎧 دانلود فایل صوتی: {download_url}"
     )
     tasks.report_to_admin_api.delay(msg, message_thread_id=settings.VISITS_THREAD_ID)
     

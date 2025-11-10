@@ -61,10 +61,7 @@ def send_voice_to_telegram(visit_id: int):
             'chat_id': settings.TELEGRAM_CHAT_ID,
             'message_thread_id': settings.VISITS_THREAD_ID,
             'caption': (
-                f"🎧 Voice Recording\n"
-                f"🏢 Place: {visit_record.place_name}\n"
-                f"👤 Person: {visit_record.person_name}\n"
-                f"📅 Time: {visit_record.visit_timestamp}"
+                f"🎧 فایل صوتی\n"
             )
         }
         
