@@ -27,14 +27,50 @@ def session_scope():
 
 
 @celery_app.task(autoretry_for=(Exception,), retry_kwargs={"max_retries": 3, "countdown": 5})
-def report_to_admin_api(msg, message_thread_id=settings.ERR_THREAD_ID):
+def report_to_admin_api(msg, message_thread_id=settings.ERR_THREAD_ID, reply_markup=None):
     json_data = {'chat_id': settings.TELEGRAM_CHAT_ID, 'text': msg[:4096], 'message_thread_id': message_thread_id}
+    if reply_markup:
+        json_data['reply_markup'] = reply_markup
     response = requests.post(
         url=f"https://api.telegram.org/bot{settings.TELEGRAM_TOKEN}/sendMessage",
         json=json_data,
         timeout=10
     )
     response.raise_for_status()
+
+@celery_app.task(autoretry_for=(Exception,), retry_kwargs={"max_retries": 3, "countdown": 5})
+def send_voice_to_telegram(visit_id: int):
+    """Send voice file to Telegram chat/thread"""
+    from application import crud
+    import io
+    
+    with session_scope() as db:
+        visit_record = crud.get_visit_by_visit_id(db, visit_id)
+        if not visit_record:
+            celery_logger.error(f"Visit record {visit_id} not found")
+            return
+        
+        # Prepare the voice file
+        voice_file = io.BytesIO(visit_record.file_data)
+        voice_file.name = visit_record.filename
+        
+        # Send voice to Telegram
+        url = f"https://api.telegram.org/bot{settings.TELEGRAM_TOKEN}/sendVoice"
+        files = {'voice': (visit_record.filename, voice_file, visit_record.content_type)}
+        data = {
+            'chat_id': settings.TELEGRAM_CHAT_ID,
+            'message_thread_id': settings.VISITS_THREAD_ID,
+            'caption': (
+                f"🎧 Voice Recording\n"
+                f"🏢 Place: {visit_record.place_name}\n"
+                f"👤 Person: {visit_record.person_name}\n"
+                f"📅 Time: {visit_record.visit_timestamp}"
+            )
+        }
+        
+        response = requests.post(url, files=files, data=data, timeout=30)
+        response.raise_for_status()
+        celery_logger.info(f"Voice file sent to Telegram for visit_id: {visit_id}")
 
 def handle_task_errors(func):
     @functools.wraps(func)

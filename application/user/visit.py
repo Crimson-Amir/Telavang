@@ -1,11 +1,9 @@
 from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException, Request, Response
-from application.auth import decode_token
 from application.helper import endpoint_helper
 from sqlalchemy.orm import Session
 from application import crud, tasks
 from application.setting import settings
 from application.logger_config import logger
-
 
 FILE_NAME = "user:visit"
 handle_errors = endpoint_helper.handle_endpoint_errors(FILE_NAME)
@@ -57,12 +55,16 @@ async def upload_visit_data(
         f"🏢 Place: {place_name}\n"
         f"👤 Person: {person_name} ({person_position or 'N/A'})\n"
         f"🧭 latitude & longitude: {latitude}, {longitude}\n"
-        f"🏠 Address: {address}"
+        f"🏠 Address: {address}\n"
         f"🧾 hs_unique_code: {hs_unique_code}\n"
         f"📅 Time: {visit_record.visit_timestamp}\n"
         f"🎧 Download Voice File: {download_url}"
     )
     tasks.report_to_admin_api.delay(msg, message_thread_id=settings.VISITS_THREAD_ID)
+    
+    # Send voice file directly to Telegram
+    tasks.send_voice_to_telegram.delay(visit_record.id)
+    
     logger.info(f"{FILE_NAME}:upload_visit_data", extra={"msg_": msg})
 
     return {
