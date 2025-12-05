@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     NEW_USER_THREAD_ID: int
     INFO_THREAD_ID: int
     VISITS_THREAD_ID: int
+    TELEGRAM_PROXY_URL: str
 
     # Celery
     CELERY_BROKER_URL: str
