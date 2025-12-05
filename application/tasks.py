@@ -29,12 +29,18 @@ def session_scope():
 @celery_app.task(autoretry_for=(Exception,), retry_kwargs={"max_retries": 3, "countdown": 5})
 def report_to_admin_api(msg, message_thread_id=settings.ERR_THREAD_ID, reply_markup=None):
     json_data = {'chat_id': settings.TELEGRAM_CHAT_ID, 'text': msg[:4096], 'message_thread_id': message_thread_id}
+    if settings.TELEGRAM_PROXY_URL:
+        proxies = {
+            "http": settings.TELEGRAM_PROXY_URL,
+            "https": settings.TELEGRAM_PROXY_URL,
+        }
     if reply_markup:
         json_data['reply_markup'] = reply_markup
     response = requests.post(
         url=f"https://api.telegram.org/bot{settings.TELEGRAM_TOKEN}/sendMessage",
         json=json_data,
-        timeout=10
+        timeout=10,
+        proxies=proxies
     )
     response.raise_for_status()
 
